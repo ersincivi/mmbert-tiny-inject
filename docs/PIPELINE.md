@@ -31,7 +31,7 @@ injection corpus, so most of the work in this repository is corpus engineering.
 Five streams:
 
 - **A — in-house attack taxonomy** *(not part of this public repository)*: a
-  private catalogue of ~100 vectors. ⚠ Its entries are **descriptions +
+  private catalogue of ~100 vectors. Its entries are **descriptions +
   detection signatures, not weaponised payloads**, so they were usable only as
   **weak auxiliary positives** — quoted trigger-phrase fragments — never as
   bulk payload text. Training on descriptions of attacks would teach the model
@@ -129,36 +129,44 @@ downstream `train.py` and distillation step needs torch.
 
 ## Status
 
-- ✅ Scaffold + schema + `corpus_common.py` (2026-07-16).
-- ✅ Stream B: `ingest_deepset.py` (direct-chat, 661), `ingest_jackhhao.py`
-  (jailbreak Apache-2.0, 1203), `ingest_bipia.py` (**indirect** isolated, MIT,
-  250), `ingest_bipia_context.py` (**indirect spliced-into-email**, MIT, 478),
-  `ingest_nemotron.py` (**indirect agentic** CC-BY-4.0, exfiltration, 676).
-- ✅ Stream C `ingest_sms_ham.py`. (Stream A used a private in-house taxonomy;
-  its adapter and rows are withheld from this repository.)
-- ✅ Stream D **decided = mmBERT transfer** (translation ruled out: the only
-  multilingual set available is GPL). See SOURCES.md.
-- ✅ **FP-eval oracle** `eval_oracle.py` — group-aware split (0 leakage),
-  FP-cost + FP-hard + per-language transfer probe; baseline validated
-  (regex-floor reach ≈ P0.99/R0.35).
-- ✅ **Stream E** `synthesize.py` — template FP-hard dev-doc negatives (181) +
-  paraphrase-varied injection (220), all `is_synthetic` → train-only. Adding
-  them left the eval set **byte-identical** (proves synthetic can't inflate).
-- ✅ **Stream D+E multilingual** `synthesize_multilingual.py` — 10 languages
-  (de/fr/tr/es/it/pt/nl/pl/ru/zh), native-authored, ~510 rows, train-only.
-  non-EN positives 110 → 560; vocab now covers Cyrillic + CJK subwords.
-- Current build: **~5945 rows, ~2775 real positives, ~49% injection**; eval set
-  892 rows (385 pos / 507 neg / 28 FP-hard), still only EN honestly measurable
-  (real multilingual eval is a separate next step).
-- ⏳ Stream B remainder (InjecAgent; qa/table/code context-assembly), keyed
-  translation-augmentation (when an API key is available), more REAL dev-doc
-  FP-hard negatives (to thicken eval FP-hard beyond 28).
-- ⏳ 2-class train head + distill + tract wire-in + signed delivery (
-  needs torch + M3 — the corpus + honest eval are ready and waiting).
+Done:
 
-> ⚠ **Honest-eval note (for the FP-eval oracle slice).** The current
+- Scaffold, schema and `corpus_common.py`.
+- Stream B: `ingest_deepset.py` (direct-chat, 661), `ingest_jackhhao.py`
+  (jailbreak, Apache-2.0, 1203), `ingest_bipia.py` (**indirect**, isolated, MIT,
+  250), `ingest_bipia_context.py` (**indirect, spliced into email**, MIT, 478),
+  `ingest_nemotron.py` (**indirect agentic**, CC-BY-4.0, exfiltration, 676).
+- Stream C `ingest_sms_ham.py`. (Stream A used a private in-house taxonomy; its
+  adapter and rows are withheld from this repository.)
+- Stream D decided as mmBERT transfer — translation was ruled out because the
+  only multilingual set available is GPL. See SOURCES.md.
+- **FP-eval oracle** `eval_oracle.py` — group-aware split (0 leakage), FP-cost,
+  FP-hard and per-language transfer probe; baseline validated at a regex-floor
+  reach of roughly P 0.99 / R 0.35.
+- **Stream E** `synthesize.py` — template FP-hard dev-doc negatives (181) and
+  paraphrase-varied injection (220), all `is_synthetic` → train-only. Adding
+  them left the eval set byte-identical, which proves synthetic rows cannot
+  inflate it.
+- **Stream D+E multilingual** `synthesize_multilingual.py` — 10 languages
+  (de/fr/tr/es/it/pt/nl/pl/ru/zh), natively authored, ~510 rows, train-only.
+  Non-English positives 110 → 560; the vocab now covers Cyrillic and CJK
+  subwords.
+
+Current build: **~5,945 rows, ~2,775 real positives, ~49% injection**; eval set
+892 rows (385 positive / 507 negative / 28 FP-hard), with only English honestly
+measurable so far — a real multilingual eval is a separate next step.
+
+Pending:
+
+- Stream B remainder (InjecAgent; qa/table/code context assembly), keyed
+  translation augmentation once an API key is available, and more real dev-doc
+  FP-hard negatives to thicken the eval FP-hard set beyond 28.
+- 2-class train head, distillation, tract wire-in and signed delivery — these
+  need torch and the M3; the corpus and honest eval are ready and waiting.
+
+> **Honest-eval note (for the FP-eval oracle slice).** The current
 > hash-on-text split can place an email's *clean* twin in train and its
-> *poisoned* twin in val (same underlying `bipia-ctx` context). That risks the
-> classifier learning the email body rather than the injection. The eval
-> oracle must use **context-grouped or held-out-source** splitting, not
-> per-row hashing.
+> *poisoned* twin in val (the same underlying `bipia-ctx` context). That risks
+> the classifier learning the email body rather than the injection. The eval
+> oracle must use **context-grouped or held-out-source** splitting, not per-row
+> hashing.

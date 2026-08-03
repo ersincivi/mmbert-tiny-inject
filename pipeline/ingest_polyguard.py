@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Stream D — PolyGuardMix (ToxicityPrompts/PolyGuardMix, 17 langs, 1.9M rows).
 
-Value here is NOT indirect-injection (PolyGuard is a safety/jailbreak+harm set) —
-it is REAL multilingual coverage we otherwise only had synthetically:
-  - `prompt_harm_label == "no"`  → REAL multilingual BENIGN negatives.
+Value here is not indirect-injection (PolyGuard is a safety/jailbreak+harm set) —
+it is real multilingual coverage we otherwise only had synthetically:
+  - `prompt_harm_label == "no"`  → real multilingual benign negatives.
   - `prompt_harm_label == "yes"` → harmful/jailbreak-class positives, tagged
-    channel=chat + notes "jailbreak-class" (jailbreak ≠ indirect; SAME convention
+    channel=chat + notes "jailbreak-class" (jailbreak ≠ indirect; same convention
     as ingest_jackhhao so the trainer can down-weight — memory: jailbreak-class).
 
-⚠ FLOOD-BOUND: 1.9M rows. Hard PER-LANG × PER-LABEL cap. Latin-script focus
+Flood-bound: 1.9M rows. Hard per-lang × per-label cap. Latin-script focus
 (our student vocab is Latin; non-Latin positives UNK — §E/K5). A few non-Latin
-BENIGN kept for negative diversity only.
+benign kept for negative diversity only.
 
-License: card (skipped per operator — public safety-research data); provenance
+License: card gate skipped for public safety-research data; provenance
 in SOURCES.md. Stdlib-only, HF datasets-server rows API. Network required.
 """
 from __future__ import annotations
@@ -33,7 +33,7 @@ BASE = "https://datasets-server.huggingface.co/rows"
 LICENSE = "polyguard-card"
 PER_LANG_LABEL_CAP = 200     # cap per (lang, label). Raised so the group-aware
                              # eval split lands >=30/lang for Latin langs → per-lang
-                             # transfer becomes MEASURABLE for the first time
+                             # transfer becomes measurable for the first time
                              # (eval_oracle marks n<30 "unmeasurable").
 STEPS = 200                  # evenly-spaced sampling windows (diverse langs)
 FETCH_PAUSE = 0.4            # polite pacing between pages (HF 429 guard)
@@ -59,7 +59,7 @@ def _get(url: str) -> dict:
         except Exception as exc:  # noqa: BLE001
             if attempt == 5:
                 print(f"  skip page after 6 tries ({exc})", file=sys.stderr)
-                return {}   # resilient: skip this page, DON'T crash the run
+                return {}   # resilient: skip this page, don't crash the run
             print(f"  retry {attempt+1} ({exc})", file=sys.stderr)
             time.sleep(3 * (attempt + 1))   # 3,6,9,12,15s — patient on 429
     return {}

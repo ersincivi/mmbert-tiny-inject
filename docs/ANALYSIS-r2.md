@@ -1,12 +1,12 @@
 # `mmbert-tiny-inject` — r1→r2 distillation regression + improvement roadmap
 
-**Date:** 2026-07-23 · **Scope:** train.py + distill_teacher.py + injection corpus + process
-**Verdict:** r2 distillation REGRESSED non-EN recall by −0.03..−0.38 across 9 languages while
-improving EN (+0.025) and FP-hard (0.389→0.250). Root cause: **3 compounding factors**, not one.
+**Scope:** train.py + distill_teacher.py + injection corpus + process
+**Verdict:** r2 distillation regressed non-English recall by −0.03..−0.38 across 9 languages while
+improving English (+0.025) and FP-hard (0.389→0.250). Root cause: **three compounding factors**, not one.
 
 ---
 
-## 1. Results Summary
+## 1. Results summary
 
 ### 1.1 r1 (baseline, no teacher)
 
@@ -15,8 +15,8 @@ improving EN (+0.025) and FP-hard (0.389→0.250). Root cause: **3 compounding f
 | precision | 0.891 |
 | recall | 0.887 |
 | F1 | 0.889 |
-| FP-rate | 0.147 ⚠ |
-| FP-hard | **0.389** (14/36) ⚠⚠ |
+| FP-rate | 0.147 |
+| FP-hard | **0.389** (14/36) |
 
 Per-lang recall (measurable): en 0.909 · zh 0.992 · fr 0.900 · it 0.882 · nl 0.848 ·
 pl 0.765 · es 0.765 · pt 0.750 · de 0.705 · sv 0.633 · cs 0.588
@@ -25,26 +25,26 @@ pl 0.765 · es 0.765 · pt 0.750 · de 0.705 · sv 0.633 · cs 0.588
 
 | metric | r1 | r2 | Δ |
 |---|---|---|---|
-| precision | 0.891 | 0.913 | +0.022 ✅ |
-| recall | 0.887 | 0.859 | −0.028 🔻 |
+| precision | 0.891 | 0.913 | +0.022 |
+| recall | 0.887 | 0.859 | −0.028 |
 | F1 | 0.889 | 0.885 | −0.004 |
-| FP-rate | 0.147 | **0.111** | −0.036 ✅ |
-| FP-hard | 0.389 | **0.250** | −0.139 ✅ |
+| FP-rate | 0.147 | **0.111** | −0.036 |
+| FP-hard | 0.389 | **0.250** | −0.139 |
 
 Per-lang recall r1→r2:
-- en 0.909 → **0.934** ✅ (+0.025)
+- en 0.909 → **0.934** (+0.025)
 - zh 0.992 → 0.996 (flat)
-- fr 0.900 → **0.720** 🔻 (−0.180)
-- de 0.705 → **0.545** 🔻 (−0.160)
-- it 0.882 → **0.500** 🔻🔻 (−0.382)
-- es 0.765 → 0.559 🔻 (−0.206)
-- pl 0.765 → 0.559 🔻 (−0.206)
-- nl 0.848 → 0.545 🔻 (−0.303)
-- pt 0.750 → 0.531 🔻 (−0.219)
-- cs 0.588 → 0.500 🔻 (−0.088)
+- fr 0.900 → **0.720** (−0.180)
+- de 0.705 → **0.545** (−0.160)
+- it 0.882 → **0.500** (−0.382)
+- es 0.765 → 0.559 (−0.206)
+- pl 0.765 → 0.559 (−0.206)
+- nl 0.848 → 0.545 (−0.303)
+- pt 0.750 → 0.531 (−0.219)
+- cs 0.588 → 0.500 (−0.088)
 - sv 0.633 → 0.600 (flat)
 
-**Pattern:** EN improved, ALL non-EN Latin collapsed uniformly. Systematic, not noise.
+**Pattern:** English improved while all non-English Latin languages collapsed uniformly. Systematic, not noise.
 
 ### 1.3 Teacher quality ceiling
 
@@ -60,9 +60,9 @@ The teacher is strong across languages — the student failed to follow it.
 
 ---
 
-## 2. Root Cause Analysis — Three Compounding Factors
+## 2. Root-cause analysis — three compounding factors
 
-### Factor A: Loss Weighting Imbalance (PRIMARY)
+### Factor A: loss-weighting imbalance (primary)
 
 **The math:** with α=0.5, T=2.0:
 
@@ -74,7 +74,7 @@ loss = (1-α)×CE + α×T²×KL
 
 - **KL weight = 2.0, CE weight = 0.5 → ratio 4:1**
 - **80% of the gradient comes from KL, only 20% from CE**
-- CE is the ONLY place where thin non-EN hard labels speak with full weight
+- CE is the only place where thin non-English hard labels speak at full weight
 - KL matches the teacher's near-degenerate distribution (P(inj)≈1.0 or ≈0.0),
   which is dominated by EN/zh mass → student optimizes for EN/zh
 
@@ -84,11 +84,11 @@ loss = (1-α)×CE + α×T²×KL
 - IT injection windows: mean 0.937, low-confidence (<0.9) = 9%
 - NL injection windows: mean 0.937, low-confidence (<0.9) = 10%
 
-The teacher is slightly less confident on non-EN, but the KL loss pushes the student
-to match ALL distributions equally — the non-EN signal (already thinner) gets drowned
+The teacher is slightly less confident on non-English, but the KL loss pushes the student
+to match all distributions equally — the non-English signal, already thinner, gets drowned
 by the 4:1 KL:CE ratio.
 
-### Factor B: Architecture Half the SMS Model (CONTRIBUTING)
+### Factor B: architecture at half the SMS model (contributing)
 
 | aspect | SMS v8 (successful) | mmbert-tiny-inject r2 (regressed) |
 |---|---|---|
@@ -107,7 +107,7 @@ The mmbert-tiny-inject student processes **2× longer sequences** with **half th
 embedding**. The model simply lacks capacity to simultaneously match the teacher's
 distribution on EN-dominant mass AND learn the non-EN signal.
 
-### Factor C: Training Data Imbalance (CONTRIBUTING)
+### Factor C: training-data imbalance (contributing)
 
 Window distribution (training set, 21,284 windows):
 
@@ -125,8 +125,9 @@ Window distribution (training set, 21,284 windows):
 | cs | 408 | 1.9% | 204 | 204 |
 | sv | 386 | 1.8% | 198 | 188 |
 
-EN+zh = **65.8%** of all training windows. Non-EN Latin languages have 400-700 windows
-each (15-25× fewer than EN). No per-language oversampling or class weighting exists.
+English plus Chinese make up **65.8%** of all training windows. Non-English Latin languages
+have 400-700 windows each, 15-25× fewer than English, and no per-language oversampling or
+class weighting exists.
 
 Additional data issues:
 - **PolyGuard (5,400 rows)** is all `channel:chat` jailbreak-class — not indirect injection.
@@ -137,9 +138,9 @@ Additional data issues:
 
 ---
 
-## 3. Improvement Roadmap
+## 3. Improvement roadmap
 
-### Tier 1: Immediate Code Changes (minutes, no re-training of teacher)
+### Tier 1: immediate code changes (minutes, no teacher re-training)
 
 #### 3.1 Fix loss weighting — `--distill-alpha 0.15`
 
@@ -181,7 +182,7 @@ The SMS model has this (make_smoke_model.py line 74). It stabilizes the pooled
 representation before the linear head, especially important when the loss landscape
 is dominated by KL (which produces different gradient dynamics than CE).
 
-### Tier 2: Short-term Code Changes (hours)
+### Tier 2: short-term code changes (hours)
 
 #### 3.4 Add learning rate warmup + decay
 
@@ -261,7 +262,7 @@ for thresh in [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]:
 This tests hypothesis (b) from the TRAINING-LOG: if distillation smooths scores,
 a lower threshold may recover non-EN recall without sacrificing FP-hard.
 
-### Tier 3: Architecture Changes (half-day, needs retrain)
+### Tier 3: architecture changes (half a day, needs a retrain)
 
 #### 3.7 Increase model capacity to match SMS v8
 
@@ -299,7 +300,7 @@ ce = focal_loss(logits, ys, alpha, args.focal_gamma)
 Focal loss down-weights easy examples (where the model is already confident), which
 helps the model focus on hard non-EN cases instead of coasting on the EN-dominant mass.
 
-### Tier 4: Data Improvements (days)
+### Tier 4: data improvements (days)
 
 #### 3.9 Expand non-EN real injection data
 
@@ -324,8 +325,8 @@ The Rust inference wrapper abstains on non-Latin at inference time, so these win
 - Waste training capacity (the model tries to learn these as "always benign")
 - May bias the model toward "unfamiliar script = benign"
 
-**Action:** Either remove these from training, or add injection examples for them.
-Removing is simpler and honest (the model won't process them at inference).
+**Action:** either remove these from training, or add injection examples for them.
+Removing is simpler and honest — the model will not process them at inference.
 
 #### 3.11 Add InjecAgent dataset
 
@@ -338,7 +339,7 @@ This would diversify the injection signal beyond PolyGuard's jailbreak-class.
 Current: 36 FP-hard eval negatives. Too thin for statistical significance.
 Target: ≥100 FP-hard negatives per language (or at least 200 total for EN).
 
-### Tier 5: Process Improvements
+### Tier 5: process improvements
 
 #### 3.13 Two-phase training schedule
 
@@ -372,28 +373,28 @@ The current smoke test doesn't exercise distillation.
 
 ---
 
-## 4. Priority Matrix
+## 4. Priority matrix
 
 | # | Change | Effort | Impact | Risk | Priority |
 |---|---|---|---|---|---|
-| 3.1 | `--distill-alpha 0.15` | 1 min | HIGH | low | **P0** (immediate) |
+| 3.1 | `--distill-alpha 0.15` | 1 min | high | low | **P0** (immediate) |
 | 3.2 | Gradient clipping | 1 line | medium | none | **P0** |
 | 3.3 | LayerNorm before head | 2 lines | medium | low | **P0** |
-| 3.6 | Doc-threshold sweep | 20 min | HIGH (tests hyp b) | none | **P0** |
+| 3.6 | Doc-threshold sweep | 20 min | high (tests hypothesis b) | none | **P0** |
 | 3.4 | LR warmup + cosine decay | 15 min | medium | low | **P1** |
-| 3.13 | Two-phase training | 10 min | HIGH | low | **P1** |
-| 3.5 | Per-lang oversampling | 1 h | HIGH | medium (need lang threading) | **P1** |
+| 3.13 | Two-phase training | 10 min | high | low | **P1** |
+| 3.5 | Per-lang oversampling | 1 h | high | medium (need lang threading) | **P1** |
 | 3.8 | Focal loss port | 30 min | medium | low | **P1** |
-| 3.7 | hidden=192, ff=hidden×4 | 30 min + retrain | HIGH | medium (size ↑) | **P2** |
+| 3.7 | hidden=192, ff=hidden×4 | 30 min + retrain | high | medium (size ↑) | **P2** |
 | 3.10 | Remove non-Latin benign-only | 5 min | low | none | **P2** |
-| 3.9 | Expand non-EN real data | days | HIGH (long-term) | low | **P2** |
+| 3.9 | Expand non-EN real data | days | high (long-term) | low | **P2** |
 | 3.12 | Thicken FP-hard eval | days | medium | none | **P2** |
 | 3.11 | InjecAgent dataset | hours | medium | low | **P3** |
 | 3.15 | Distill smoke test | 30 min | low | none | **P3** |
 
 ---
 
-## 5. Recommended Experiment Sequence
+## 5. Recommended experiment sequence
 
 **r3 (P0, minutes):** `--distill-alpha 0.15` + gradient clipping + LayerNorm + threshold sweep
 - If non-EN recovers → accept as v1 candidate
@@ -409,7 +410,7 @@ The current smoke test doesn't exercise distillation.
 
 ---
 
-## 6. What NOT to Change
+## 6. What not to change
 
 - **Windowing algorithm** (`windowing.py`): the char-counted sliding window + max-pool
   is correct and well-tested. The tail-injection problem is solved.
@@ -424,7 +425,7 @@ The current smoke test doesn't exercise distillation.
 
 ---
 
-## 7. Comparison with SMS v8 Success
+## 7. Comparison with the SMS v8 result
 
 | factor | SMS v8 | mmbert-tiny-inject r2 | lesson |
 |---|---|---|---|
@@ -447,10 +448,10 @@ couldn't follow — the KL gradient dominated and the model optimized for the EN
 
 ---
 
-## 8. Honest Limits
+## 8. Honest limits
 
-1. **Only 36 FP-hard eval negatives** — all FP-hard metrics have wide confidence intervals.
-   The r1→r2 improvement (14→9 FP-hard) could be noise. Thicken before drawing conclusions.
+1. **Only 36 FP-hard eval negatives** — every FP-hard metric has a wide confidence interval,
+   and the r1→r2 improvement (14→9) could be noise. Thicken it before drawing conclusions.
 2. **Per-lang eval is thin** — many languages have exactly 30-34 eval positives (the minimum
    threshold). A single misclassified example swings recall by ±0.03.
 3. **sv 0.633 is a corpus gap** — confirmed by teacher ceiling (also 0.633). Not fixable

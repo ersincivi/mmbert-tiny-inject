@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Stream E — rule-based synthetic BALANCE (no API key; templated, not LLM).
+"""Stream E — rule-based synthetic balance (no API key; templated, not LLM).
 
 Generative/LLM synthesis is blocked here (no ANTHROPIC/MISTRAL key — see
 SOURCES.md Stream-D). So Stream E is **template-driven**, targeting the two
 balance gaps that matter, both tagged `is_synthetic: true`:
 
-  1. FP-HARD benign negatives (PRIORITY) — legitimate document / dev-doc /
+  1. FP-hard benign negatives (priority) — legitimate document / dev-doc /
      support / security-education text that *contains injection-shaped words*
      ("ignore the previous step", "set your API key", "system prompt", "never
      reveal your password"). These directly harden the FP-cost money metric.
@@ -13,9 +13,9 @@ balance gaps that matter, both tagged `is_synthetic: true`:
      persona grammar with varied fillers, for robustness against paraphrase
      (a known weakness of the deterministic rule layer). Capped, to avoid templated skew.
 
-⚠ HONEST-EVAL CONTRACT: `is_synthetic` rows are forced to TRAIN by the oracle
-(`eval_oracle.py`) and NEVER enter the held-out eval. We train on synthetic
-hard cases but MEASURE on real ones. So synthetic can't inflate our scores.
+Honest-eval contract: `is_synthetic` rows are forced to train by the oracle
+(`eval_oracle.py`) and never enter the held-out eval. We train on synthetic
+hard cases but measure on real ones. So synthetic can't inflate our scores.
 (This also means real FP-hard eval coverage stays thin — a documented limit;
 the fix is harvesting real dev-docs, not more templates.)
 
@@ -32,7 +32,7 @@ from corpus_common import CorpusWriter, Row
 def sample_product(*slots, cap):
     """Uniformly sample `cap` tuples spread across the full cartesian product.
 
-    A single stride across the whole product varies EVERY slot (unlike a
+    A single stride across the whole product varies every slot (unlike a
     synchronized coprime index, whose period collapses to LCM of lengths), so
     the sample is both high-diversity and high-unique. Deterministic.
     """
@@ -42,7 +42,7 @@ def sample_product(*slots, cap):
 
 LICENSE = "synthetic"
 
-# ── 1. FP-HARD benign templates ───────────────────────────────────────────────
+# ── 1. FP-hard benign templates ───────────────────────────────────────────────
 # Each is legitimate text a real user/document would contain, but loaded with
 # injection-shaped vocabulary. label = benign.
 
@@ -65,7 +65,7 @@ FP_HARD_TEMPLATES = [
     "Please confirm your identity by entering the code we sent.",
     "Skip step {n} if you already set your {secret}.",
     "After you {action}, remember to revoke the old {secret}.",
-    # security education (talks ABOUT injection — must not be flagged)
+    # security education (talks about injection — must not be flagged)
     "Prompt injection is an attack where hidden instructions hijack an AI.",
     "A jailbreak attempt tries to make the model ignore its safety rules.",
     "Never reveal your password or {secret} to anyone, even support staff.",
@@ -160,7 +160,7 @@ def gen_injection(writer: CorpusWriter, cap: int) -> int:
 
 def main() -> int:
     writer = CorpusWriter()
-    # FP-hard is the PRIORITY (hardens the FP-cost money metric); synthetic
+    # FP-hard is the priority (hardens the FP-cost money metric); synthetic
     # injection is a modest paraphrase supplement, deliberately capped lower so
     # templated positives don't dominate the real ones.
     fp = gen_fp_hard(writer, cap=600)

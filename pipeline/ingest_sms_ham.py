@@ -3,7 +3,7 @@
 
 Two kinds of negative:
   1. Plain benign — sampled ham text (label!=spam) for base-rate benign.
-  2. FP-HARD — benign text that *contains* injection-shaped words ("ignore",
+  2. FP-hard — benign text that *contains* injection-shaped words ("ignore",
      "verify", "password", "instructions", "api key" …). These are the
      hardest negatives: they teach the classifier that "scary words in
      legitimate text" != injection (the transactional-FP-guard lesson from
@@ -60,7 +60,7 @@ def main() -> int:
             except json.JSONDecodeError:
                 continue
             # Only benign SMS (ham) becomes a negative for the injection model. The SMS corpus
-            # labels malicious rows as "phishing"/"spam" — WHITELIST ham so no
+            # labels malicious rows as "phishing"/"spam" — whitelist ham so no
             # smishing leaks in as a benign negative (would teach the model
             # that phishing text is safe).
             if obj.get("label") != "ham" or obj.get("label_3class") != "ham":

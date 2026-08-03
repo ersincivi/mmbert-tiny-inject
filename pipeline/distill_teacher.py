@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
-"""mmbert-tiny-inject teacher (WINDOW-level) — fine-tune a multilingual encoder on the same
+"""mmbert-tiny-inject teacher (window-level) — fine-tune a multilingual encoder on the same
 training windows the tiny student sees, then export per-window soft logits
 keyed by window-hash for `train.py --train --teacher-logits`.
 
-Adapted from `distill_teacher.py` in the SMS classifier project but NOT a mechanical copy. The one
+Adapted from `distill_teacher.py` in the SMS classifier project but not a mechanical copy. The one
 real difference: SMS labels whole (short) messages, while mmbert-tiny-inject documents are
-large, so the student trains on OVERLAPPING CHARACTER WINDOWS (`windowing.py`).
+large, so the student trains on overlapping character windows (`windowing.py`).
 The teacher must therefore be window-level too:
 
-  - it applies the IDENTICAL `training_windows` expansion (same dense/sparse/
+  - it applies the identical `training_windows` expansion (same dense/sparse/
     benign label discipline, same bipia-ctx hints via `train.doc_hint`);
   - every exported logit row is keyed by `train.window_hash(window_text)` — the
     student looks soft-labels up by the same hash, so the KL aligns
-    window-for-window. Teacher & student keep their OWN tokenizers;
+    window-for-window. Teacher & student keep their own tokenizers;
     distillation aligns on the 2-class [benign, injection] output, not tokens.
 
-LENGTH SAFETY (the SMS lesson — measured 2026-07-24, do not regress):
-  900-char windows are NOT ≤256 mmBERT tokens. Measured over all 21,284 train
+Length safety (the SMS lesson — measured, do not regress):
+  900-char windows are not ≤256 mmBERT tokens. Measured over all 21,284 train
   windows: p50=158 p90=223 p99=327 max=749 tokens. A 256 cap would silently
   truncate 4.5% of windows — 674 of them injection, 574 from llmail (the most
   valuable adaptive-attack slice). Default --max-len is therefore 768 (= zero
-  truncation on the current corpus) and the run MEASURES the real distribution
+  truncation on the current corpus) and the run measures the real distribution
   up front, warning loudly if the chosen cap cuts anything. Length-bucketing
   keeps the cost honest: most batches stay ≤256 wide; only the rare long
   windows pad wide. The teacher never ships, so a big cap costs training time
   only — zero effect on the on-device artifact.
 
 Modes:
-    python3 distill_teacher.py --prepare     # torch-FREE: expand + hash + stats
+    python3 distill_teacher.py --prepare     # torch-free: expand + hash + stats
     python3 distill_teacher.py --limit 500   # bounded ~1-min timing run (keeps MPS)
     python3 distill_teacher.py               # full fine-tune + doc-eval + export
     python3 distill_teacher.py --smoke       # 500 windows, 1 epoch, CPU
 
-Install (operator venv, M3):  pip install torch transformers sentencepiece
+Install (training venv, M3):  pip install torch transformers sentencepiece
 Output:  work/teacher_logits.jsonl   {hash, logits:[benign,injection], label, lang}
-Then (BASELINE FIRST — proves the M3/MPS path and sets a shippable floor;
+Then (baseline first — proves the M3/MPS path and sets a shippable floor;
 distillation was +0.02 on SMS: a lever, not a foundation):
     python3 train.py --train
     python3 train.py --train --teacher-logits work/teacher_logits.jsonl
@@ -60,7 +60,7 @@ TRUNC_WARN_FRAC = 0.005   # loud warning if the cap cuts >0.5% of windows
 # ── data ──────────────────────────────────────────────────────────────────────
 
 def window_rows(docs: list[dict]) -> list[tuple[str, str, str]]:
-    """Documents → (window_text, label, lang) via the SAME expansion as the
+    """Documents → (window_text, label, lang) via the same expansion as the
     student's `expand_training` (same calls, plus lang carried for reporting)."""
     rows: list[tuple[str, str, str]] = []
     for d in docs:
@@ -183,7 +183,7 @@ def main() -> int:
     if args.smoke:
         rows = rows[:500]
     if args.limit and len(rows) > args.limit:
-        # RANDOM sample, not the corpus head — the file starts with short
+        # Random sample, not the corpus head — the file starts with short
         # deepset rows, so a head-slice would overestimate rows/sec badly and
         # give a false full-run ETA.
         random.Random(args.seed).shuffle(rows)
@@ -218,14 +218,14 @@ def main() -> int:
     texts = [r[0] for r in rows]
     labels = [CLASS_IX[r[1]] for r in rows]
 
-    # Pre-tokenize ONCE (no padding): per-window ids reused every epoch + the
-    # lengths that drive bucketing AND the truncation guard below.
+    # Pre-tokenize once (no padding): per-window ids reused every epoch + the
+    # lengths that drive bucketing and the truncation guard below.
     enc_all = tok(texts, truncation=True, max_length=args.max_len, padding=False)
     all_ids = enc_all["input_ids"]
     lengths = [len(x) for x in all_ids]
     pad_id = tok.pad_token_id if tok.pad_token_id is not None else 0
 
-    # LENGTH-SAFETY GUARD (the SMS lesson): measure what the cap actually cuts.
+    # Length-safety guard (the SMS lesson): measure what the cap actually cuts.
     # A truncated row tokenizes to exactly max_len, so re-check those candidates
     # without the cap — cheap (few rows) and exact.
     at_cap = [i for i, ln in enumerate(lengths) if ln >= args.max_len]
@@ -243,12 +243,12 @@ def main() -> int:
               "labels.\n  Raise --max-len (bucketing keeps short batches cheap; "
               "teacher never ships).")
 
-    # LENGTH-BUCKETING (proven on the SMS teacher): sort by token length so each
-    # batch pads only to ITS OWN max, quantized to PAD_MULTIPLE so MPS sees few
+    # Length-bucketing (proven on the SMS teacher): sort by token length so each
+    # batch pads only to its own max, quantized to PAD_MULTIPLE so MPS sees few
     # distinct shapes (a shape per batch would re-trigger graph recompiles).
     #
-    # TOKEN-BUDGET cap on top (the 768-cap companion): --batch rows is the cap
-    # for shapes ≤256; longer shapes automatically take FEWER rows so one step
+    # Token-budget cap on top (the 768-cap companion): --batch rows is the cap
+    # for shapes ≤256; longer shapes automatically take fewer rows so one step
     # never exceeds batch×256 padded tokens. Without this, the rare 768-wide
     # batch at 32 rows would spike peak attention memory ~9× vs a 256-wide one
     # (O(L²)) — an OOM/latency hazard on 16GB MPS. Rows only ever shrink, never
@@ -290,7 +290,7 @@ def main() -> int:
     train_batches = length_batches(range(len(rows)))
     for epoch in range(1, epochs + 1):
         model.train()
-        random.shuffle(train_batches)  # shuffle batch ORDER; length stays homogeneous
+        random.shuffle(train_batches)  # shuffle batch order; length stays homogeneous
         total = 0.0
         t0 = time.perf_counter()
         for idx in train_batches:
@@ -318,7 +318,7 @@ def main() -> int:
                   f"~{train_min:.0f} min train ({args.epochs} epochs × {full_n:,}) "
                   f"+ ~{extra_min:.0f} min export+eval")
 
-    # Teacher quality ceiling: SAME max-pool doc-eval the student uses (mirrors
+    # Teacher quality ceiling: same max-pool doc-eval the student uses (mirrors
     # deployment), with the teacher's own tokenizer. Skipped on smoke/limit.
     if args.eval and not (args.smoke or partial):
         eval_maxpool_teacher(model, tok, device, torch, args.max_len)
@@ -353,7 +353,7 @@ def main() -> int:
 
 
 def eval_maxpool_teacher(model, tok, device, torch, max_len) -> None:
-    """Document-level max-pool eval of the TEACHER on inject_eval.jsonl — the
+    """Document-level max-pool eval of the teacher on inject_eval.jsonl — the
     student's honest metric applied to the teacher, so the distillation ceiling
     (and the teacher→student gap) is directly readable."""
     eval_docs = load_docs(EVAL_JSONL)

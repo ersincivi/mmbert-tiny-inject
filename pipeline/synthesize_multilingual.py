@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
-"""Stream D+E — MULTILINGUAL synthetic injection + FP-hard benign (no API key).
+"""Stream D+E — multilingual synthetic injection + FP-hard benign (no API key).
 
 The multilingual strategy (SOURCES.md) is mmBERT teacher distillation, but a
-from-scratch tiny student only learns the languages it SEES during distillation
-— so it needs multilingual TEXT (tokenizer coverage + embedding training +
+from-scratch tiny student only learns the languages it sees during distillation
+— so it needs multilingual text (tokenizer coverage + embedding training +
 per-language positive boundary). The teacher supplies soft labels; we supply the
-text. This module generates that text directly (operator directive 2026-07-17:
-no translation API — the content is authored here, natively per language).
+text. This module generates that text directly: no translation API — the
+content is authored here, natively per language.
 
 Design:
-  - Universal keys (API / token / URL / Base64 / IBAN) are LANGUAGE-AGNOSTIC and
+  - Universal keys (API / token / URL / Base64 / IBAN) are language-agnostic and
     reused verbatim — the deterministic rule layer already exploits this.
   - Only the language-specific grammar (override verbs, action verbs, sensitive-
     data noun phrases, benign carrier sentences) is authored per language.
   - Injection rows combine override × action × target × dest × urgency via a
     uniform product sample (diverse, deterministic).
-  - Benign rows include FP-HARD carriers (legit text with injection-shaped words)
+  - Benign rows include FP-hard carriers (legit text with injection-shaped words)
     so the FP-cost stays low in every language, not just English.
 
-All rows: is_synthetic=True (→ eval_oracle forces them to TRAIN, never eval) +
+All rows: is_synthetic=True (→ eval_oracle forces them to train, never eval) +
 is_translated=True (non-native-origin marker) + lang=<code>. The honest
-per-language EVAL set must still be REAL text (collected separately) — synthetic
+per-language eval set must still be real text (collected separately) — synthetic
 can train but must never be the yardstick.
 """
 from __future__ import annotations
@@ -372,7 +372,7 @@ def gen_language(writer: CorpusWriter, lang: str, block: dict,
 
 def main() -> int:
     writer = CorpusWriter()
-    per_lang_inj = 20   # reduced 45→20 (operator 2026-07-24): real multilingual
+    per_lang_inj = 20   # reduced 45→20: real multilingual
                         # now comes from PolyGuard; synthetic kept only as a small
                         # per-language positive-boundary supplement (train-only).
     totals = {}

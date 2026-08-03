@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Stream E — benign email negatives (channel-confound guard for LLMail).
 
-LLMail adds ~4000 email-channel INJECTION rows, all with email surface structure
-(Subject line, greeting, body, sign-off). If EVERY email-structured row in the
+LLMail adds ~4000 email-channel injection rows, all with email surface structure
+(Subject line, greeting, body, sign-off). If every email-structured row in the
 corpus is injection, the tiny model learns "email structure ⇒ attack" and would
 flag legitimate mail the user pastes to summarize. This generator supplies the
-missing side: real-shaped, BENIGN emails (order/shipping/invoice/meeting/
+missing side: real-shaped, benign emails (order/shipping/invoice/meeting/
 newsletter/account) — exactly the mail people actually feed to an AI assistant.
 
 Combinatorial templates × CorpusWriter dedup → diverse benign email text.
 `channel="email"`, `is_synthetic=True` (train-only per honest-eval), EN + DE.
-Bounded by CAP so it balances, not floods.
+Bounded by cap so it balances, not floods.
 
 License: our own authored text. Stdlib-only. No network.
 """

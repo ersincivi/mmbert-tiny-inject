@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Train the on-device prompt-injection classifier (mmbert-tiny-inject, 2-class).
 
-Successor to `train.py` in the SMS classifier project, NOT a copy — prompts are large, so the core
+Successor to `train.py` in the SMS classifier project, not a copy — prompts are large, so the core
 difference is length handling: instead of head-truncating (which drops tail
 injections), documents are split into overlapping character windows
-(`windowing.py`) and the document score is a MAX-POOL over its windows. See
+(`windowing.py`) and the document score is a max-pool over its windows. See
 that module + MODEL_CONTRACT.md for the contract the on-device Rust engine
 mirrors.
 
@@ -13,18 +13,18 @@ Data: `corpus_work/inject_{train,eval}.jsonl` (produced by
 2-class: benign | injection.
 
 Two modes:
-  python3 train.py --prepare   # torch-FREE: expand windows, build vocab, encode,
+  python3 train.py --prepare   # torch-free: expand windows, build vocab, encode,
                                #   report length/window stats. Validates the
                                #   char-counted pipeline without a GPU.
   python3 train.py --train     # needs torch (M3/MPS). Trains + max-pool eval.
   python3 train.py --train --smoke   # 2k windows, 1 epoch, CPU — pipeline check
   python3 train.py --train --teacher-logits work/teacher_logits.jsonl
-                               # distillation (optional lever, AFTER a clean
+                               # distillation (optional lever, after a clean
                                #   baseline run): adds KL(student||teacher) per
-                               #   WINDOW, keyed by window_hash — see
+                               #   window, keyed by window_hash — see
                                #   distill_teacher.py.
 
-LOCKSTEP: tokenization = `build_vocab.pre_tokenize` in the SMS classifier project (mirror of
+Lockstep: tokenization = `build_vocab.pre_tokenize` in the SMS classifier project (mirror of
 the Rust inference wrapper), imported not re-implemented. The
 on-device prompt engine will reuse the same pre_tokenize + greedy encode.
 """
@@ -86,7 +86,7 @@ def doc_hint(d: dict) -> str:
 
 
 def window_hash(text: str) -> str:
-    """Distillation lookup key: sha1 of the EXACT window text. Teacher
+    """Distillation lookup key: sha1 of the exact window text. Teacher
     (distill_teacher.py) and student compute this identically, so KL aligns
     window-for-window without sharing a tokenizer."""
     return hashlib.sha1(text.encode("utf-8")).hexdigest()
@@ -214,7 +214,7 @@ def run_train(args) -> int:
 
     if not VOCAB_PATH.exists():
         prepare()
-    # --vocab: score a checkpoint with the vocab it was TRAINED with. A model
+    # --vocab: score a checkpoint with the vocab it was trained with. A model
     # and its vocab are a unit — token ids shift whenever the corpus changes,
     # so re-scoring an old checkpoint against a freshly built vocab.txt would
     # silently produce garbage (see rebuild_r1_artifacts.py).
@@ -233,7 +233,7 @@ def run_train(args) -> int:
     print(f"vocab {len(vocab_list)} | device {device} | seq_len {SEQ_LEN} | "
           f"train windows {len(train_pairs)} | eval docs {len(eval_docs)}")
 
-    # Distillation (optional): precomputed per-WINDOW teacher soft-labels, keyed
+    # Distillation (optional): precomputed per-window teacher soft-labels, keyed
     # by window_hash. Uncovered windows fall back to CE-only (KL-masked) so a
     # --limit'ed (partial) teacher export degrades gracefully instead of crashing.
     teacher = None
@@ -267,7 +267,7 @@ def run_train(args) -> int:
                                              batch_first=True, dropout=0.1)
             # enable_nested_tensor=False: the nested-tensor fast path calls
             # aten::_nested_tensor_from_mask_left_aligned, unimplemented on MPS
-            # (M3 is the training device) — hit in the 2026-07-24 smoke.
+            # (M3 is the training device) — hit in the smoke run.
             self.enc = nn.TransformerEncoder(enc, layers, enable_nested_tensor=False)
             self.norm = nn.LayerNorm(hidden)   # r4: stabilize pooled repr (SMS has this)
             self.head = nn.Linear(hidden, len(CLASSES))
@@ -280,13 +280,13 @@ def run_train(args) -> int:
             return self.head(self.norm(pooled))
 
     torch.manual_seed(0)  # reproducible weights/dropout — r-rounds must differ
-                          # by their KNOB, not by init noise (TRAINING-LOG r3)
+                          # by their knob, not by init noise (TRAINING-LOG r3)
     model = Classifier().to(device)
 
-    # Eval-only: score an existing checkpoint against the CURRENT eval set.
+    # Eval-only: score an existing checkpoint against the current eval set.
     # Purpose: after a data round changes the eval set, the old headline number
     # is not comparable — the honest baseline for the next round is the old
-    # checkpoint RE-SCORED on the new eval (TRAINING-LOG "COMPARABILITY BREAK").
+    # checkpoint re-scored on the new eval (TRAINING-LOG "comparability break").
     if args.eval_checkpoint:
         model.load_state_dict(torch.load(args.eval_checkpoint, map_location=device))
         model.eval()
@@ -376,7 +376,7 @@ def run_train(args) -> int:
 
 
 def evaluate_maxpool(model, eval_docs, vocab, device, torch) -> None:
-    """Document-level eval that MIRRORS deployment: score every window, MAX-pool.
+    """Document-level eval that mirrors deployment: score every window, max-pool.
 
     This is the honest metric — it matches how the on-device engine will run, so
     a tail injection that head-truncation would miss is scored correctly here.
@@ -428,7 +428,7 @@ def evaluate_maxpool(model, eval_docs, vocab, device, torch) -> None:
         print(f"    {lg:5s} recall {lang_tp[lg]/n if n else 0:.3f} ({lang_tp[lg]}/{n}){flag}")
 
     # Threshold sweep — calibration diagnostic (TRAINING-LOG r2/r3: distill
-    # shifts doc scores conservative; if the model still RANKS well, the fix is
+    # shifts doc scores conservative; if the model still ranks well, the fix is
     # the threshold, not the training). Scores are already collected — free.
     print("\n  ── threshold sweep (doc-level) ──")
     print("  thr    prec   rec    F1     FP-rate  FP-hard")

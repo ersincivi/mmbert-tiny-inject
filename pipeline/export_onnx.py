@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """mmbert-tiny-inject student → ONNX export (fp32 + dynamic-quant INT8) + verification.
 
-Adapts the PROVEN SMS-model export path (legacy TorchScript exporter,
+Adapts the proven SMS-model export path (legacy TorchScript exporter,
 opset-14, `quantize_dynamic`): the SMS v8 artifact produced this way is live
-on the OTA channel and round-trips through `tract` on device. NOT the QDQ
+on the OTA channel and round-trips through `tract` on device. Not the QDQ
 static-quant format — `quantize_dynamic` emits dynamically-quantized ops,
 which is the path validated in tract (the old "QDQ" label in
 MODEL_CONTRACT/sms prints was a misnomer for this same call).
@@ -13,9 +13,9 @@ Contract (mirrors the Rust inference wrapper's model loader):
   output  logits:float32[1,2]  in [benign, injection] order
 
 Verification (needs onnxruntime, runs by default):
-  1. PARITY — torch vs fp32-onnx vs int8-onnx logits on a sample of real eval
+  1. Parity — torch vs fp32-onnx vs int8-onnx logits on a sample of real eval
      windows; reports max |Δ| and verdict flips at the doc threshold.
-  2. INT8 DOC-EVAL — the full max-pool document eval (same metric as
+  2. INT8 doc-eval — the full max-pool document eval (same metric as
      train.py) run through the INT8 artifact: the number that actually ships.
      Compare against the checkpoint's ledger entry before signing/OTA.
 
@@ -58,7 +58,7 @@ def sha256(path: Path) -> str:
 
 
 def build_model(torch, nn, vocab_list: list[str], vocab: dict[str, int], hidden: int):
-    """EXACT mirror of train.py's Classifier — any drift breaks load_state_dict
+    """exact mirror of train.py's Classifier — any drift breaks load_state_dict
     (strict=True, fail-loud by design)."""
 
     class Classifier(nn.Module):

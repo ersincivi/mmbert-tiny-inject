@@ -2,10 +2,10 @@
 """G4 — German-first WordPiece vocab from corpus.jsonl.
 
 Produces `vocab.txt` in the exact format the Rust inference wrapper
-loads: one token per line, id = line number, NO empty lines, specials
+loads: one token per line, id = line number, no empty lines, specials
 [PAD]/[UNK]/[CLS]/[SEP] present (engine errors without them).
 
-Pre-tokenization MIRRORS the engine's `pre_tokenize` exactly: NFKC + lowercase,
+Pre-tokenization mirrors the engine's `pre_tokenize` exactly: NFKC + lowercase,
 whitespace split, ASCII punctuation as standalone tokens (non-ASCII punctuation
 stays inside words — same as Rust `char::is_ascii_punctuation`).
 
@@ -15,7 +15,7 @@ German-first: de/fr/it rows are upweighted (MODEL_CONTRACT: de/en/fr/it);
 en arrives at full natural volume, everything else rides along at weight 1
 and falls back to char-level pieces or [UNK].
 
-stdlib only. Run AFTER import_corpus.py:
+stdlib only. Run after import_corpus.py:
   python3 build_vocab.py                       # corpus_work/vocab.txt, 11k
   python3 build_vocab.py --size 12000 --lang-weights de=20,fr=12,it=12
 """
@@ -58,15 +58,15 @@ def pre_tokenize(text: str):
 # ── BPE training (frequency-scored, WordPiece output form) ───────────────────
 
 
-# ── Non-Latin [UNK]-protection (operator 2026-07-02, adapted smart_trim idea) ──
-# WordPiece char-level FALLBACK: a word it can't split into subwords is broken to
-# single chars; if those chars are in vocab it is NOT [UNK], just a longer piece
-# sequence. If even ONE char of an alphabet is missing, the WHOLE word → [UNK] and
-# its entropy is zeroed. So we UNCONDITIONALLY seed the base letters of Cyrillic +
+# ── Non-Latin [UNK]-protection (adapted smart_trim idea) ─────────────────────
+# WordPiece char-level fallback: a word it can't split into subwords is broken to
+# single chars; if those chars are in vocab it is not [UNK], just a longer piece
+# sequence. If even one char of an alphabet is missing, the whole word → [UNK] and
+# its entropy is zeroed. So we unconditionally seed the base letters of Cyrillic +
 # Arabic (cheap, ~300 tokens — guarantees no-total-[UNK] for ru/ar even with zero
-# training data), and take a frequency QUOTA of CJK chars from the corpus (their
-# semantics arrive once Mistral zh/ja data is added). Rules are the operator's;
-# the source is our CORPUS frequency (not a 256k teacher vocab we don't have).
+# training data), and take a frequency quota of CJK chars from the corpus (their
+# semantics arrive once Mistral zh/ja data is added). The source is our own
+# corpus frequency, not a 256k teacher vocab we don't have.
 CYRILLIC = range(0x0400, 0x0460)  # main Cyrillic letters (Ё…я + Ukrainian/etc.)
 ARABIC = range(0x0620, 0x0650)    # Arabic base letters
 CJK_RANGES = ((0x4E00, 0x9FFF), (0x3040, 0x30FF), (0xAC00, 0xD7AF))  # Han·Kana·Hangul

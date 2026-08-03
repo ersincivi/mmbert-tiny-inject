@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Stream B — nvidia/Nemotron Agentic Indirect Prompt Injection (CC-BY-4.0).
 
-High-value INDIRECT + agentic injection: realistic malicious instructions
+High-value indirect + agentic injection: realistic malicious instructions
 embedded in tool results / documents (healthcare/finance domains, exfiltration
 & unauthorized-action categories). Per-row `license: CC BY 4.0` — training-safe
 with attribution. 1272 rows (train split only).

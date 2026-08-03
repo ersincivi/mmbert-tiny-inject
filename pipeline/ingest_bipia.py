@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """Stream B — Microsoft BIPIA indirect-injection benchmark (MIT).
 
-BIPIA is the one source here that matches our threat model exactly: INDIRECT
+BIPIA is the one source here that matches our threat model exactly: indirect
 prompt injection — malicious instructions embedded in external content (email,
 web, table, code) that the AI processes on the user's behalf. arXiv 2312.14197.
 
 Structure: `benchmark/{text,code}_attack_{train,test}.json`, each a dict keyed
-by attack CATEGORY → list of injected-instruction strings.
+by attack category → list of injected-instruction strings.
 
-⚠ LABEL DISCIPLINE (same class of bug as the SMS-phishing leak): the text file
+Label discipline (the same class of bug as the SMS-phishing leak): the text file
 mixes truly-manipulative categories with benign-task categories. In isolation,
-"What is the capital of Brazil?" is NOT injection — labeling it positive would
+"What is the capital of Brazil?" is not injection — labeling it positive would
 poison the classifier. So we split explicitly:
-  - MANIPULATIVE text categories  -> injection  (channel url_text)
-  - BENIGN-TASK text categories    -> benign     (channel url_text)
-  - ALL code categories            -> injection  (channel tool_result; every
+  - Manipulative text categories  -> injection  (channel url_text)
+  - benign-task text categories    -> benign     (channel url_text)
+  - all code categories            -> injection  (channel tool_result; every
     code_attack category is malicious: Cookie Theft, Memory Scanning, …)
-Any category not in the known maps is SKIPPED + warned (fail loud, not silent).
+Any category not in the known maps is skipped + warned (fail loud, not silent).
 
 Honest limit: we ingest the isolated injected instruction. BIPIA's full value
 is the instruction embedded in context (indirect signal). Context-assembly

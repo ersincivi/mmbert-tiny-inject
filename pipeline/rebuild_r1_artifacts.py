@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Reconstruct the round-1 vocab (work/vocab_r1.txt) — torch-free, one-shot.
 
-Why: `train.py --prepare` after the 2026-07-24 data-hygiene round overwrote
-work/vocab.txt with a vocab built from the NEW corpus/split. The round-1
-checkpoints (work/student_r4a.pt etc.) were trained with the OLD vocab — a
+Why: `train.py --prepare` after the data-hygiene round overwrote
+work/vocab.txt with a vocab built from the new corpus/split. The round-1
+checkpoints (work/student_r4a.pt etc.) were trained with the old vocab — a
 model and its vocab are a unit, so re-scoring r4a against the new vocab would
 silently produce garbage. This script rebuilds the old vocab exactly:
 
   * old corpus = the first 15,513 rows of inject.jsonl (today's session only
-    APPENDED 559 sms-ham rows; repair_lang rewrote lang/notes in place but
-    never text or ORDER, and vocab/split depend only on text),
+    appended 559 sms-ham rows; repair_lang rewrote lang/notes in place but
+    never text or order, and vocab/split depend only on text),
   * old split  = eval_oracle's round-1 rules (base fraction 0.18, no FP-hard
     boost, no label-suspect exclusion, weak/synthetic forced to train),
   * old vocab  = build_vocab over the old train windows (deterministic).

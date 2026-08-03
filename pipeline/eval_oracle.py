@@ -14,18 +14,18 @@ Two modes:
   python3 eval_oracle.py score PREDS.jsonl  # score predictions vs eval set
   python3 eval_oracle.py score --baseline   # score the built-in keyword baseline
                                             # (sanity check that the harness
-                                            #  works BEFORE mmbert-tiny-inject exists)
+                                            #  works before mmbert-tiny-inject exists)
 
 Honest-eval guarantees in `build`:
-  - GROUP-AWARE split: rows sharing a `group` key (e.g. bipia-ctx poisoned +
+  - Group-aware split: rows sharing a `group` key (e.g. bipia-ctx poisoned +
     clean twins) always land on the same side — the model can't learn the email
     body in train and be tested on its poisoned twin in eval.
-  - weak_seed + synthetic rows NEVER enter eval (auxiliary, not honest truth).
-  - FP-HARD tagging: benign eval rows whose text carries injection-shaped words
+  - weak_seed + synthetic rows never enter eval (auxiliary, not honest truth).
+  - FP-hard tagging: benign eval rows whose text carries injection-shaped words
     are marked so the scorer can report FP-rate on them specifically.
 
 `id` for a row = sha1 of its normalized text (stable). A predictions file is
-JSONL of {"id": <row id>, "pred": "injection"|"benign"} OR {"id","score":0..1}.
+JSONL of {"id": <row id>, "pred": "injection"|"benign"} or {"id","score":0..1}.
 """
 from __future__ import annotations
 
@@ -71,8 +71,8 @@ def is_fp_hard(r: dict) -> bool:
 def load_suspects() -> dict[str, str]:
     """Provenance'd label-suspect exclusion list (id -> reason).
 
-    Rows whose source label is credibly WRONG (e.g. jailbreak-shaped text a
-    dataset marks "benign") are excluded from BOTH sides of the split: in eval
+    Rows whose source label is credibly wrong (e.g. jailbreak-shaped text a
+    dataset marks "benign") are excluded from both sides of the split: in eval
     they corrupt the FP metric, in train they teach the wrong label. The list
     lives in label_suspects.jsonl — never silent row surgery on the corpus.
     """
@@ -164,7 +164,7 @@ def load_eval() -> list[dict]:
 
 
 def baseline_predict(rows: list[dict]) -> dict:
-    """Keyword baseline — a SANITY predictor, NOT the real mmbert-tiny-inject classifier.
+    """Keyword baseline — a sanity predictor, not the real mmbert-tiny-inject classifier.
 
     Flags a row as injection if it contains any obvious override/exfil marker.
     Deliberately crude: its whole purpose is to prove the scorer computes

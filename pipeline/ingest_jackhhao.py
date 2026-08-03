@@ -4,7 +4,7 @@
 Named in the ProtectAI-22 blueprint (Apache-2.0, verified on the dataset's own
 card). ~1306 rows (1044 train / 262 test), roughly 50/50 benign / jailbreak.
 
-⚠ HONEST NOTE: jailbreak != indirect prompt injection. Jailbreak = coercing a
+Honest note: jailbreak is not indirect prompt injection. Jailbreak = coercing a
 model to violate its own safety policy (direct chat). It shares the injection
 *surface* (role override, instruction override, "you are now …") so it is
 useful positive signal, but it is direct-channel — tagged `channel: chat` and

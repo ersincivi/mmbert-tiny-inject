@@ -18,12 +18,12 @@
 | Source | Rows | License | Lang | Indirect? | Status | Notes |
 |---|---|---|---|---|---|---|
 | **deepset/prompt-injections** | 662 (546 train / 116 test) | ⚠ see note | EN/DE/FR | ❌ direct-chat | ✅ ingested | **Primary anchor** — real labeled injection text. HF card is contradictory: repo top-level `apache-2.0`, `dataset_info` block `cc-by-4.0`. Both are training-safe **with attribution**; we tag rows `license: apache-2.0` and keep this note as the attribution/provenance record. |
-| **jackhhao/jailbreak-classification** | 1306 (1044/262) | **Apache-2.0** ✅ (own card + ProtectAI list) | EN | ❌ direct-chat jailbreak | ✅ ingested | `ingest_jackhhao.py`. jailbreak→injection, benign→benign. ⚠ jailbreak ≠ indirect injection (shares override surface) → tagged `channel:chat` + `notes:jailbreak-class` for distinct weighting. |
-| **Microsoft BIPIA** (isolated) | text 15-cat + code 10-cat (train+test) | **MIT** ✅ (LICENSE file verified) | EN | ✅ **indirect** — matches our threat model exactly | ✅ ingested (250 rows) | `ingest_bipia.py`. Manipulative text-cats→injection, benign-task-cats→benign, all code-cats→injection (tool_result). ⚠ train/test files have DIFFERENT category sets — both classified by reading content (fail-loud on unknown). arXiv 2312.14197. |
-| **Microsoft BIPIA** (context-assembly) | 100 email contexts × 4 attacks | **MIT** ✅ | EN | ✅ **true indirect** | ✅ ingested (478 rows) | `ingest_bipia_context.py`. Splices malicious instruction into real email bodies (mirrors BIPIA `insert_start/end/middle`), emits paired poisoned (injection) + clean (benign). **This is the real indirect signal.** ⚠ eval must use context-grouped split (poisoned/clean twins) — see README honest-eval note. Follow-up: qa/table/code contexts too. |
+| **jackhhao/jailbreak-classification** | 1306 (1044/262) | **Apache-2.0** ✅ (own card + ProtectAI list) | EN | ❌ direct-chat jailbreak | ✅ ingested | `ingest_jackhhao.py`. jailbreak→injection, benign→benign. Note: jailbreak ≠ indirect injection (it shares the override surface) → tagged `channel:chat` + `notes:jailbreak-class` for distinct weighting. |
+| **Microsoft BIPIA** (isolated) | text 15-cat + code 10-cat (train+test) | **MIT** ✅ (LICENSE file verified) | EN | ✅ **indirect** — matches our threat model exactly | ✅ ingested (250 rows) | `ingest_bipia.py`. Manipulative text-cats→injection, benign-task-cats→benign, all code-cats→injection (tool_result). ⚠ train/test files have different category sets — both classified by reading content (fail-loud on unknown). arXiv 2312.14197. |
+| **Microsoft BIPIA** (context-assembly) | 100 email contexts × 4 attacks | **MIT** ✅ | EN | ✅ **true indirect** | ✅ ingested (478 rows) | `ingest_bipia_context.py`. Splices malicious instruction into real email bodies (mirrors BIPIA `insert_start/end/middle`), emits paired poisoned (injection) + clean (benign). **This is the real indirect signal.** ⚠ eval must use a context-grouped split (poisoned/clean twins) — see README honest-eval note. Follow-up: qa/table/code contexts too. |
 | **nvidia/Nemotron-RL-Agentic-Indirect-Prompt-Injection-v1** | 1272 (676 ingested) | **CC-BY-4.0** ✅ (per-row) | EN | ✅ **indirect + agentic** — matches threat model | ✅ ingested | `ingest_nemotron.py`. Realistic embedded payloads (healthcare/finance, exfiltration & unauthorized-action). Extracts `injection.injection_text` (fallback `goal`). channel=tool_result. EN-only → boosts indirect/agentic category, not multilingual. |
-| **in-house attack taxonomy** *(withheld)* | ~100 vectors | ours | EN | ✅ (by design) | ⚠ not published here | ⚠ DESCRIPTIONS + detection signatures, **not payloads**. Ingested as `weak_seed:true` auxiliary positives (quoted trigger phrases only), never bulk payload. The catalogue, its adapter and the 152 rows it produced are excluded from this repository and from the demo dataset. |
-| **ProtectAI-22 blueprint (remainder)** | ~20 more | mixed (MIT/CC0/no-license/CC-BY) | EN-heavy | mixed | 🔬 review | Card names only some: Apache-2.0 injection ones = jackhhao ✅ + `Harelix/Prompt-Injection-Mixed-Techniques-2024` (⛔ **now gated/removed** — real sourcing hazard). Remainder mostly benign/instruction (`chatbot_instruction_prompts`, `grok-conversation-harmless`, `open-instruct`, `Salad-Data`, `xstest`) = benign-side expansion. ⚠ ProtectAI v2 is **EN-only by design** → reinforces Stream-D need. |
+| **in-house attack taxonomy** *(withheld)* | ~100 vectors | ours | EN | ✅ (by design) | ⚠ not published here | ⚠ Descriptions + detection signatures, **not payloads**. Ingested as `weak_seed:true` auxiliary positives (quoted trigger phrases only), never bulk payload. The catalogue, its adapter and the 152 rows it produced are excluded from this repository and from the demo dataset. |
+| **ProtectAI-22 blueprint (remainder)** | ~20 more | mixed (MIT/CC0/no-license/CC-BY) | EN-heavy | mixed | 🔬 review | Card names only some: Apache-2.0 injection ones = jackhhao ✅ + `Harelix/Prompt-Injection-Mixed-Techniques-2024` (⛔ **now gated/removed** — real sourcing hazard). Remainder mostly benign/instruction (`chatbot_instruction_prompts`, `grok-conversation-harmless`, `open-instruct`, `Salad-Data`, `xstest`) = benign-side expansion. ⚠ ProtectAI v2 is **English-only by design** → reinforces the Stream-D need. |
 | **InjecAgent** | tool-chain injection | benchmark | EN | ✅ agentic | 🔬 review | arXiv 2403.02691. Agentic/tool-result channel. |
 
 ## Negative (benign) sources
@@ -49,9 +49,9 @@
 | **Octavio-Santana/prompt-injection-attack-detection-multilingual** | ⛔ **`license: gpl`.** 11 languages (pt/en/zh/fr/vi/de/hi/it/ja/es/th, 6339 rows) — would have been ideal multilingual coverage, but GPL copyleft on training data is incompatible with how the resulting model is redistributed. Clean-room discipline: excluded. (Could be revisited scoring-only, but not for training.) |
 | **rikka-snow/prompt-injection-multilingual** | Rows are **identical to deepset** ("Refugee crisis in Europe solutions", …) — a re-host, not new data. Redundant; skip. |
 
-## Multilingual synthetic (Stream D+E — `synthesize_multilingual.py`, 2026-07-17)
+## Multilingual synthetic
 
-Authored directly (operator: no translation API) in **10 languages** — de, fr,
+Authored directly in **10 languages** — de, fr,
 tr, es, it, pt, nl, pl, ru, zh — native-quality override/exfil grammar + FP-hard
 benign carriers. Universal keys (API/token/URL/Base64) stay language-agnostic;
 only per-language verbs/nouns are authored. ~510 rows (45 injection + 6 benign
@@ -63,18 +63,16 @@ CJK** subword tokens (previously non-Latin → `[UNK]`; the v8 tokenizer blocker
 for the student is now addressed). This is the multilingual TEXT the mmBERT
 teacher will soft-label and the student will learn from.
 
-⚠ Still needed (next): a REAL per-language **eval** set (≥100 real rows/lang) —
-synthetic trains but must never be the yardstick. Eval remains EN-only
-measurable today.
+Still needed next: a real per-language **eval** set (≥100 real rows per
+language). Synthetic data trains, but it must never be the yardstick. Eval
+remains English-only measurable today.
 
-## Multilingual (Stream D — DECISION 2026-07-17: **mmBERT transfer**)
+## Multilingual (**mmBERT transfer**)
 
 The open question was: translate vs trust-transfer. **Decided by
 evidence, not preference** — both alternatives to transfer are blocked:
 - **Machine-translation is not executable here** — no `ANTHROPIC_API_KEY` /
-  `MISTRAL_API_KEY` in this environment. Deferred until the operator provides a
-  key; when unblocked, target **German first** + non-Latin scripts (where
-  transfer is weakest).
+  `MISTRAL_API_KEY` in this environment.
 - **The one big multilingual injection dataset (Octavio, 11 langs) is GPL** →
   rejected above.
 
@@ -94,38 +92,42 @@ training data, is the real open question.
 
 ---
 
-## Enrichment round — 2026-07-24 (operator: skip the license GATE, keep the LEDGER)
+## Enrichment round
 
-Operator decision: security/public-interest attack data — do not let the license
-card BLOCK ingestion, but keep provenance here (attribution for CC-BY/ODC-BY is
-cheap; model-provenance is shipped practice). Corpus **5,945 → 15,513 rows**;
+Decision for this round: on security and public-interest attack data, the
+license card does not block ingestion, but provenance is recorded here —
+attribution for CC-BY/ODC-BY is cheap, and model provenance is shipped
+practice. Corpus **5,945 → 15,513 rows**;
 real positives **2,325 → 8,523 (3.7×)**; non-EN positives **110 → 3,623 (33×)**.
 Both build-report honest-warnings cleared.
 
 | Source | HF id | License | Role | Bound |
 |---|---|---|---|---|
-| **LLMail-Inject** | `microsoft/llmail-inject-challenge` (Phase1+2, 461K) | MIT (repo) | ⭐ REAL adaptive INDIRECT email injection (SaTML 2025) — the exact gap | spread-sampled, dedup, **cap 4,000** (got 4,018) |
+| **LLMail-Inject** | `microsoft/llmail-inject-challenge` (Phase1+2, 461K) | MIT (repo) | Real adaptive indirect email injection (SaTML 2025) — the exact gap | spread-sampled, dedup, **cap 4,000** (got 4,018) |
 | **PolyGuardMix** | `ToxicityPrompts/PolyGuardMix` (1.91M, 17 lang) | card (skipped-gate) | REAL multilingual: benign negs + jailbreak-class positives (`channel:chat`, tagged) | **per-(lang,label) cap 200** (got 5,400) |
 | **email-benign** | *(own synthetic)* `synthesize_email_benign.py` | own-synthetic-CC0 | benign email negatives — LLMail channel-confound guard (Subject/greeting/sign-off, EN+DE) | cap 420, train-only |
 | synthetic-ml | *(own)* `synthesize_multilingual.py` | own | reduced 45→20/lang (real PolyGuard now covers multilingual) | 240 |
 
-⭐ **The per-language measurement question is now ANSWERABLE.** `eval_oracle.py build`
-holds out ≥30 eval positives for **10 Latin langs + en** (fr 50 · de 44 · es/it/cs/pl 34 ·
-nl 33 · pt 32 · sv 30) → per-lang recall MEASURABLE for the first time (was 0). tr/ru/ar
-still too few (<30). Fetch is resilient (skips 429'd pages, never crashes).
+**The per-language measurement question is now answerable.** `eval_oracle.py build`
+holds out ≥30 eval positives for **10 Latin languages + en** (fr 50 · de 44 ·
+es/it/cs/pl 34 · nl 33 · pt 32 · sv 30), so per-language recall is measurable for the
+first time — it was 0 before. tr/ru/ar are still too few (<30). The fetch is resilient:
+it skips rate-limited pages instead of crashing.
 
-**Deferred / not collected:** WildJailbreak (`allenai/wildjailbreak`, gated — Ai2 form
-accepted + HF_TOKEN ready, but datasets-server `/rows` doesn't serve it → needs raw-TSV
-download; jailbreak-class = lower value) · NotInject/InjecGuard + CAPTURE (not accessible
-via datasets-server). **Tuning knob (next --fresh):** PolyGuard non-Latin benign ~3,000 =
-[UNK] dead-weight (the Rust inference wrapper abstains on non-Latin at inference) → non-Latin cap ~50.
+**Deferred / not collected:** WildJailbreak (`allenai/wildjailbreak`, gated — the Ai2
+form is accepted and HF_TOKEN is ready, but datasets-server `/rows` doesn't serve it, so
+it needs a raw-TSV download; jailbreak-class is lower value anyway) · NotInject/InjecGuard
+and CAPTURE (not accessible via datasets-server). **Tuning knob for the next `--fresh`:**
+PolyGuard non-Latin benigns (~3,000) are `[UNK]` dead weight, since the Rust inference
+wrapper abstains on non-Latin at inference — drop the non-Latin cap to ~50.
 
 ---
 
-## Data-hygiene round — 2026-07-24 (pre-rerun audit, second session)
+## Data-hygiene round (pre-rerun audit)
 
-Audit before the r4a-config re-run found the corpus SOURCES sound but the
-LANG TAGS broken, and fixed three things (all scripted, all provenance'd):
+The audit before the r4a-config re-run found the corpus sources sound but the
+language tags broken, and fixed three things — all scripted, all with
+provenance recorded:
 
 1. **Language repair** (`repair_lang.py`, idempotent). `guess_lang` was
    presence-based: one CJK char claimed "zh", one diacritic claimed "fr"/"de"/
@@ -136,33 +138,33 @@ LANG TAGS broken, and fixed three things (all scripted, all provenance'd):
    by unique chars + function words with a length-scaled floor, argmax) — TR no
    longer steals German rows via shared ö/ü (deepset de restored 44→134).
    Rows repaired in place with a `lang-fix:orig->final` note. Honest fallout:
-   zh eval positives 248 (fake) → 5 (real) = zh recall is now UNMEASURABLE
+   zh eval positives 248 (fake) → 5 (real), so zh recall is now unmeasurable
    until real Chinese injection eval data is sourced (PolyGuard non-Latin
    positives are skipped by design — the Rust inference wrapper abstains on
    non-Latin).
 
 2. **Label-suspect exclusion** (`label_suspects.jsonl`, consumed by
    `eval_oracle.py build`). 5 PolyGuard "benign" rows with explicit
-   restriction-removal / disguised-elicitation framing (incl. the 2 known from
-   TRAINING-LOG r5-inspect) are excluded from BOTH sides. Review bar kept
-   tight on purpose — plain roleplay benigns stay (they ARE the Pattern-B
-   FP-hard class).
+   restriction-removal / disguised-elicitation framing (including the 2 known
+   from TRAINING-LOG r5-inspect) are excluded from both sides. The review bar is
+   kept tight on purpose — plain roleplay benigns stay, because they are the
+   Pattern-B FP-hard class.
 
 3. **FP-hard eval 36 → 183** (≥150 statistical floor met). Two levers:
-   (a) FP_HARD_WORDS moved to `corpus_common.py` as the SINGLE shared
-   definition (miner and oracle had drifted apart) and made multilingual
-   (de/fr/tr/bs/es/it/pt/nl/pl credential + override vocabulary) — the
-   EN-only list found just 114 rows in a fr/bs/tr-heavy ham pool, the
+   (a) FP_HARD_WORDS moved to `corpus_common.py` as the single shared
+   definition (miner and oracle had drifted apart) and was made multilingual
+   (de/fr/tr/bs/es/it/pt/nl/pl credential and override vocabulary) — the
+   English-only list found just 114 rows in a fr/bs/tr-heavy ham pool, while the
    multilingual list mines 518 (+559 new sms-ham rows ingested);
    (b) groupless real FP-hard benigns get a boosted eval fraction
    (`FP_HARD_EVAL_FRACTION = 0.30` vs base 0.18) in `eval_oracle.py`.
 
 Corpus now **16,072 rows** (train 13,377 / eval 2,690 after suspects).
 Eval: 1,448 pos / 1,242 neg (183 FP-hard); 10 Latin langs + en all ≥30 pos.
-⚠ Teacher logits from any earlier run are STALE (window set changed) — re-run
-`distill_teacher.py` from scratch; never reuse smoke-run logits.
+Teacher logits from any earlier run are stale because the window set changed —
+re-run `distill_teacher.py` from scratch, and never reuse smoke-run logits.
 
-**Still open (deferred by operator choice this round):** it/nl/sv real
-positives beyond single-source PolyGuard (≥500 target) · REAL zh/tr/ru eval
+**Still open (deferred this round):** it/nl/sv real
+positives beyond single-source PolyGuard (≥500 target) · real zh/tr/ru eval
 positives · Pattern-A/B curated negatives (train-side synthesis + real dev-doc
 eval harvest).

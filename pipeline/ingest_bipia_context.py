@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stream B — BIPIA CONTEXT-ASSEMBLY (true indirect injection signal). MIT.
+"""Stream B — BIPIA context-assembly (true indirect injection signal). MIT.
 
 `ingest_bipia.py` ingests the isolated injected instruction. Its full value,
 though, is the instruction *embedded in otherwise-benign content* — that is the
@@ -9,8 +9,8 @@ email that carries a hidden malicious instruction the AI obeys).
 This adapter mirrors BIPIA's own assembly (bipia/data/utils.py insert_start /
 insert_end / insert_middle): it takes each real email context and splices a
 malicious instruction into it, producing:
-  - INJECTION: benign email body + spliced malicious instruction (channel email)
-  - BENIGN   : the same email body, unpoisoned
+  - Injection: benign email body + spliced malicious instruction (channel email)
+  - benign   : the same email body, unpoisoned
 
 Paired same-context positive/negative teaches the classifier to spot the
 injected line *within* legitimate content — not just recognise a bare attack

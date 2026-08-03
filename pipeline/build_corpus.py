@@ -4,7 +4,7 @@
 Runs every ingest adapter into corpus_work/inject.jsonl and prints a composition
 report (label balance, per-source, per-lang, weak-seed share, honest warnings).
 
-The honest train/eval SPLIT is NOT done here — it belongs to `eval_oracle.py`
+The honest train/eval split is not done here — it belongs to `eval_oracle.py`
 (group-aware, so an assembled source's poisoned+clean twins never straddle the
 split). Run `python3 eval_oracle.py build` after.
 
@@ -26,11 +26,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ADAPTERS = (
     "ingest_deepset.py",    # Stream B anchor — real labeled injection (direct chat)
     "ingest_jackhhao.py",   # Stream B — jailbreak-class positives + benign (Apache-2.0)
-    "ingest_bipia.py",      # Stream B — INDIRECT injection (isolated instruction) MIT
-    "ingest_bipia_context.py",  # Stream B — INDIRECT injection spliced into email context
-    "ingest_nemotron.py",   # Stream B — INDIRECT agentic injection (CC-BY-4.0, exfiltration)
-    "ingest_llmail.py",     # Stream B — REAL adaptive INDIRECT email injection (LLMail, MIT, bounded 4k)
-    "ingest_polyguard.py",  # Stream D — REAL multilingual (PolyGuard: benign negs + jailbreak-class, capped)
+    "ingest_bipia.py",      # Stream B — indirect injection (isolated instruction) MIT
+    "ingest_bipia_context.py",  # Stream B — indirect injection spliced into email context
+    "ingest_nemotron.py",   # Stream B — indirect agentic injection (CC-BY-4.0, exfiltration)
+    "ingest_llmail.py",     # Stream B — real adaptive indirect email injection (LLMail, MIT, bounded 4k)
+    "ingest_polyguard.py",  # Stream D — real multilingual (PolyGuard: benign negs + jailbreak-class, capped)
     "ingest_sms_ham.py",    # Stream C — benign negatives + FP-hard mining
     "synthesize.py",        # Stream E — templated FP-hard negatives + injection paraphrase
     "synthesize_email_benign.py",  # Stream E — benign email negatives (LLMail channel-confound guard)

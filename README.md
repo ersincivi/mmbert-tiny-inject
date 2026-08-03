@@ -28,7 +28,7 @@
   <a href="#quick-start">Quick start</a> ·
   <a href="#the-data">The data</a> ·
   <a href="#result">Result</a> ·
-  <a href="#what-went-wrong">What went wrong</a> ·
+  <a href="#what-we-learned">What we learned</a> ·
   <a href="#method-notes">Method notes</a> ·
   <a href="#limitations">Limitations</a>
 </p>
@@ -55,7 +55,7 @@ positives — benign text carrying injection-shaped words — fell by two thirds
 and non-English recall moved up sharply (Swedish 0.600 → 0.800, Dutch
 0.667 → 0.788, Italian and Czech 0.735 → 0.824).
 
-⚠ **Not a like-for-like pair.** The hard-negative evaluation set was rebuilt
+**Not a like-for-like pair.** The hard-negative evaluation set was rebuilt
 mid-project, from 36 documents to 183, which invalidated comparability with
 earlier runs. The strictly comparable measurement on the final set is 0.104 →
 0.120, i.e. distillation cost three documents there while buying the
@@ -103,10 +103,13 @@ provenance: [`data/DATA_LICENSES.md`](data/DATA_LICENSES.md).
 ## Quick start
 
 The sample carries the schema the pipeline expects, so it runs without
-conversion.
+conversion — drop it in where the adapters would have written their output:
 
 ```bash
 cd pipeline
+mkdir -p corpus_work
+cp ../data/demo_inject_500.jsonl corpus_work/inject.jsonl
+
 python3 eval_oracle.py build          # group-aware train/eval split
 python3 eval_oracle.py score --baseline
 ```
@@ -118,47 +121,46 @@ the split self-checks for zero group leakage.
 
 Training additionally needs `pipeline/requirements.txt` (torch + onnx).
 
-## What went wrong
+## What we learned
 
-The mistakes are the transferable part. Each is reproducible from the ledger.
+Five findings shaped the pipeline. Each is reproducible from the ledger.
 
-**A negative result about a technique was really a statement about corpus size.**
-Distillation initially cut hard false positives (0.389 → 0.250) while collapsing
-non-English recall across nine languages at once — Italian 0.882 → 0.500, Dutch
-0.848 → 0.545. We concluded it could not win both and shelved it, **but wrote
-the retry condition into the verdict** instead of closing the question. After
-the corpus grew and was cleaned, the same recipe produced the multilingual gain
-in the table above. The original verdict is marked rescinded in place, still in
-the ledger, with the correction under it.
+**Shelve a negative result with the condition that would reopen it.**
+Distillation first cut hard false positives (0.389 → 0.250) while collapsing
+non-English recall across nine languages — Italian 0.882 → 0.500, Dutch
+0.848 → 0.545. Instead of closing the question, the verdict was parked with its
+retry condition written in: a larger, cleaner corpus. Once the corpus grew, the
+same recipe produced the multilingual gain in the table above. The original
+verdict stays in the ledger, marked rescinded, with the correction under it.
 
-**We tuned the wrong knob for three rounds.** Chasing multilingual recall
-through distillation strength (α 0.5 → 0.3 → 0.15) ended with α 0.15 being a
-measurable **no-op** — identical F1 and false-positive rates, per-language
-differences inside noise. What actually moved multilinguality was the student
-itself: hidden size 128 → 192, feedforward 256 → 768, LayerNorm before the head,
-focal loss, warmup and cosine schedule. That lifted 7 of 11 measurable languages.
+**The architecture was the lever, not the knob.** Three rounds chased
+multilingual recall through distillation strength (α 0.5 → 0.3 → 0.15) and ended
+at a measurable no-op. What moved it was the student itself: hidden 128 → 192,
+feedforward 256 → 768, LayerNorm before the head, focal loss, warmup and cosine
+schedule — 7 of 11 measurable languages up. An aggregate F1 that moved 0.004 had
+been hiding that collapse, so per-language recall is now reported every round.
 
-**We optimised against noise and called it progress.** The hard-negative set had
-**36 documents**, so every delta in that column was one to three documents. It
-was grown to 183 before any further tuning. If a metric's smallest meaningful
-step is a handful of samples, it is not a metric yet — and rebuilding it broke
-comparability with every earlier number, which is written into the ledger rather
-than quietly absorbed.
+**A metric needs enough samples to be a metric.** The hard-negative set held 36
+documents, so every delta was one to three documents. It was rebuilt to 183
+before any further tuning. That cost comparability with every earlier number, so
+the break is recorded in the ledger and the previous candidate was re-scored on
+the new set to give an honest anchor (0.874) for the next round to beat.
 
-**Read the errors instead of tuning again.** We dumped the twelve
-confidently-wrong documents and read them. A prior analysis had predicted the
-failure mode would be developer documentation, security articles and API docs:
-across twelve documents that prediction was correct for **zero**. The real cause
-was ordinary casual chat containing credential and instruction vocabulary —
-*"where 2 get user name & password"* (0.997), *"PLEASE DONT IGNORE MYCALLS"*
-(0.801) and, with some irony, *"Ok, I will follow your instruction."* (0.858).
-That is a data gap; no hyperparameter would have found it.
+**Read the errors before turning another knob.** The twelve confidently-wrong
+documents were dumped and read. A prior analysis predicted the failure mode
+would be developer documentation, security articles and API docs; across twelve
+documents that was right for **zero**. The real cause was casual chat carrying
+credential and instruction vocabulary — *"where 2 get user name & password"*
+(0.997), *"PLEASE DONT IGNORE MYCALLS"* (0.801). Being a data gap, it took a
+data fix: mining multilingual hard negatives cut the hard false-positive rate
+0.235 → 0.104 in the next round.
 
-**A dataset confound found by hand, not by evaluation.** All 4,018 positives
-from one source are budget-themed corporate e-mail, and the corpus contains no
-budget-themed benign e-mail. Legitimate prose about a quarterly budget review
-scores **0.9999**. The evaluation set shares the blind spot and cannot see it.
-It is logged as the next round's top data item — not fixed.
+**Evaluation cannot see a blind spot it shares.** All 4,018 positives from one
+source are budget-themed corporate e-mail and the corpus has no budget-themed
+benign e-mail, so legitimate prose about a quarterly budget review scores
+**0.9999**. The evaluation set has the same gap, which is why a runtime smoke
+test found this and no metric did. It is logged as the next round's top data
+item — documented, not fixed.
 
 ## Method notes
 

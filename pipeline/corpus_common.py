@@ -27,11 +27,11 @@ CHANNELS = ("url_text", "pdf", "image", "email", "tool_result", "sms", "chat")
 _CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 _CJK = re.compile(r"[　-鿿]")
 _ARABIC = re.compile(r"[؀-ۿ]")
-# Diacritics/script are the PRIMARY signal. Function-word hints are restricted
-# to language-specific words that do NOT also occur in English — e.g. "instructions"
+# Diacritics/script are the primary signal. Function-word hints are restricted
+# to language-specific words that do not also occur in English — e.g. "instructions"
 # is English-shared and must never be a French hint, and "hat"/"die"/"pour" are
 # English words and must never be German/French hints. TR chars are the
-# UNIQUELY Turkish ones (ğ ı ş İ) — ö/ü/ç are shared with German/French and
+# uniquely Turkish ones (ğ ı ş İ) — ö/ü/ç are shared with German/French and
 # claiming them for Turkish stole real German rows.
 _DE_CHARS = re.compile(r"[äöüßÄÖÜ]")
 _DE_WORDS = re.compile(
@@ -50,7 +50,7 @@ _TR_WORDS = re.compile(
 
 _LETTER = re.compile(r"[^\W\d_]")
 
-# A language owns the row only when its signal DOMINATES — never on mere
+# A language owns the row only when its signal dominates — never on mere
 # presence. Adaptive attacks (LLMail) smuggle short foreign-script/-language
 # snippets inside English text; presence-based detection mislabeled 1,322
 # English emails as "zh" (median CJK ratio 3%), and a single French diacritic
@@ -71,7 +71,7 @@ def guess_lang(text: str) -> str:
         return "ar"
     # Latin langs: score = unique chars (weighted) + function words, take the
     # argmax — ordered first-match let Turkish claim German rows via shared
-    # ö/ü. The floor scales with text length: a whole smuggled French SENTENCE
+    # ö/ü. The floor scales with text length: a whole smuggled French sentence
     # inside a long English email yields a handful of hits, but a genuinely
     # French text of that length yields dozens — absolute thresholds can't
     # separate the two.
@@ -88,8 +88,8 @@ def guess_lang(text: str) -> str:
     return "en"
 
 
-# Injection-shaped / credential vocabulary that makes a BENIGN row a hard
-# negative (FP-hard). SINGLE source of truth — both the sms-ham miner and
+# Injection-shaped / credential vocabulary that makes a benign row a hard
+# negative (FP-hard). Single source of truth — both the sms-ham miner and
 # eval_oracle's fp_hard tagging import this, so "what we mine" and "what we
 # measure" can never drift apart again. Multilingual on purpose: the ham
 # pool is fr/bs/tr-heavy and the old EN-only list found just 114 rows.
@@ -125,7 +125,7 @@ def is_fp_hard(text: str) -> bool:
 def norm_text(text: str) -> str:
     """Light normalization for storage: NFC + collapse whitespace + trim.
 
-    Deliberately does NOT strip zero-width / homoglyphs — those are signal
+    Deliberately does not strip zero-width / homoglyphs — those are signal
     for the concealment layers and may be useful adversarial training text.
     """
     text = unicodedata.normalize("NFC", text)

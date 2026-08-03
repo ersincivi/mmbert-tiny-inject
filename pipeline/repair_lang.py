@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """One-shot corpus repair: re-tag script-mislabeled lang fields in place.
 
-Why: guess_lang() used to claim "zh"/"ru"/"ar" on the PRESENCE of a single
+Why: guess_lang() used to claim "zh"/"ru"/"ar" on the presence of a single
 non-Latin char. LLMail adaptive attacks smuggle short CJK/Cyrillic snippets
 inside English emails, so 1,322 English rows were tagged "zh" (median CJK
 ratio 3%) — the per-language eval then "measured" Chinese recall on English
 text. guess_lang is now dominance-based (corpus_common._SCRIPT_DOMINANCE).
 
-This script re-runs the fixed guess_lang over rows whose lang was GUESSED at
+This script re-runs the fixed guess_lang over rows whose lang was guessed at
 ingest time (sources that don't carry an authoritative language field) and
 currently claim a non-Latin script. Every change is recorded in the row's
 `notes` (no silent row surgery). Idempotent — a second run changes nothing.
 
-Deliberately NOT touched: polyguard / sms-ham / synthetic-ml (lang comes from
+Deliberately not touched: polyguard / sms-ham / synthetic-ml (lang comes from
 the dataset metadata or is authored), and Latin-lang guesses (the hint regexes
 were already safe).
 """
@@ -29,7 +29,7 @@ GUESSED_SOURCES = {
     "llmail", "jackhhao", "deepset", "bipia", "bipia-ctx", "nemotron",
  "synthetic", "email-benign",
 }
-# All langs guess_lang can emit besides "en" — Latin hints were ALSO
+# All langs guess_lang can emit besides "en" — Latin hints were also
 # presence-based (a smuggled French snippet inside an English email claimed
 # "fr"), so fr/tr/de guesses are revisited too, not just the script langs.
 SCRIPT_LANGS = {"zh", "ru", "ar", "tr", "de", "fr"}

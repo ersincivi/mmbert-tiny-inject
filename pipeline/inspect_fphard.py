@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Inspect confidently-wrong FP-hard eval docs (ANALYSIS-r2 follow-up #1).
 
-The r4 threshold sweep showed FP-hard is threshold-INSENSITIVE: ~12 benign
+The r4 threshold sweep showed FP-hard is threshold-insensitive: ~12 benign
 eval docs score >0.60 — not borderline, confidently wrong. No threshold fixes
-those; only targeted training data can. Step one is READING them: this tool
+those; only targeted training data can. Step one is reading them: this tool
 loads a trained student checkpoint, scores the held-out eval split, and dumps
 every false-positive benign doc above --min-score with its metadata and the
-text of its HIGHEST-SCORING window (the window that triggered max-pool — the
+text of its highest-scoring window (the window that triggered max-pool — the
 pattern the model is actually reacting to).
 
 Read-only analysis — no training, nothing written unless --out is given.
