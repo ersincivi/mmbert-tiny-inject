@@ -1,0 +1,32 @@
+# Training data and intermediate artefacts - never publish these
+corpus_work/
+work/
+sources/
+*.jsonl
+!data/demo_sms_500.jsonl
+!data/demo_inject_500.jsonl
+airi_seed/
+label_suspects.jsonl
+
+# Model weights - never publish these
+*.onnx
+*.pt
+*.bin
+*.safetensors
+vocab*.txt
+
+# Secrets
+.env
+.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / IDE
+.DS_Store
+**/.DS_Store
+.idea/
+.vscode/

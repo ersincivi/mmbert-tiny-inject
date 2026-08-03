@@ -1,0 +1,8 @@
+# G5 SMS classifier training — offline tooling, never ships on-device.
+# M3 Air / MPS. import_corpus.py + build_vocab.py are stdlib-only and do NOT
+# need this; only train.py / make_smoke_model.py do.
+torch>=2.2          # MPS backend (Apple Silicon)
+onnx>=1.16          # ONNX export
+onnxscript>=0.1     # torch>=2.6 imports this at export entry even with dynamo=False
+onnxruntime>=1.18   # QDQ INT8 dynamic quantisation
+ftfy>=6.2           # mojibake repair in import_corpus.py (optional but recommended)
